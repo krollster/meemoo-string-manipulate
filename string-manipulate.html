@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>string-manipulate</title>
+  <meta name="author" content="krollster">
+  <meta name="description" content="manipulate strings" />
+  
+  <script type="text/javascript" src="http://meemoo.org/meemoo/v1/meemoo-min.js"></script>
+  
+  <style type="text/css">
+    html, body 
+    {
+      margin: 0;
+      padding:0;
+      font-family: verdana;
+      font-size: 15px;
+    }
+  </style>
+</head>
+<body>
+  
+  <div id="manipulated">...</div>
+  
+  <script type="text/javascript">
+    
+    // shuffle helper
+    Array.prototype.sm_shuffle = function ()
+    {
+        var i = this.length, j, temp;
+        
+        if ( i > 0 )
+        {
+          while ( --i ) 
+          {
+              j = Math.floor( Math.random() * ( i + 1 ) );
+              temp = this[i];
+              this[i] = this[j];
+              this[j] = temp;
+          }
+        }
+
+        return this
+    };
+
+    var manipulated = document.getElementById("manipulated");
+    var string      = "";
+    var _time2words = undefined;
+    var _reverse    = false;
+    var _shuffle    = false;
+
+    function set_string(str)
+    {
+      string = str.toString(); // other modules may not send strings
+      combine();
+    }
+
+    function set_reverse(boo)
+    {
+      _reverse = boo;
+      combine();
+    }
+
+    function reverse()
+    {
+      string = string.split('').reverse().join('');
+    }
+    
+    function set_shuffle(boo)
+    { 
+      _shuffle = boo;
+      combine();
+    }
+
+    function shuffle()
+    {
+      string = string.split('').sm_shuffle().join('');
+    }
+    
+    function timepart2word(str)
+    {
+      // timepart2word, time2words
+      s   = ['zero', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine', 'ten'];
+      t_s = ['eleven', 'twelve', 'thirteen', 'fourteen', 'fifteen', 'sixteen', 'seventeen', 'eighteen', 'nineteen'];
+      t   = ['twenty', 'thirty', 'fourty', 'fifty'];
+
+      timewords = [];
+      t_len     = t.length;
+      s_len     = s.length;
+
+      timewords = timewords.concat(s, t_s);
+
+      for (i = 0; i < t_len; i++)
+      { 
+        timewords.push(t[i]); // twenty, thirty etc.
+
+        for (j = 1; j < s_len - 1; j++)
+        {
+          timewords.push(t[i] + '-' + s[j]); // twenty-one, twenty-two etc.
+        }
+      }
+
+      return timewords[parseInt(str)];
+    }
+
+    function set_time2words(str)
+    { 
+      _time2words = str;
+      combine();
+    }
+    function time2words()
+    {
+      if (_time2words == "")
+      { 
+        string = timepart2word(string);
+      }
+      else if (_time2word != undefined)
+      { 
+        t_temp = string.split(_time2words);
+        t_temp_len = t_temp.length;
+
+        for (tp = 0; tp < t_temp_len; tp++)
+        {
+          t_temp[tp] = timepart2word(t_temp[tp]);
+        }
+
+        string = t_temp.join(' ');
+      }
+    }
+
+    function combine()
+    {
+      if (_time2words != undefined){ time2words(); }
+      if (_reverse){ reverse(); }
+      if (_shuffle){ shuffle(); }
+      
+      // Escape HTML
+      var textNode = document.createTextNode(string);
+      manipulated.innerHTML = "";
+      manipulated.appendChild(textNode);
+
+      send();
+    }
+
+    function clear()
+    {
+      manipulated.innerHTML = "";
+      string                = "";
+      _time2words           = undefined;
+      _reverse              = false;
+      _shuffle              = false;
+    }
+
+    function send()
+    {
+      Meemoo.send("string", string );
+    }
+
+    Meemoo
+      .setInfo(
+      {
+        title: "string-manipulate",
+        author: "benk",
+        description: "manipulate text strings"
+      })
+      .addInputs(
+      {
+        string: 
+        {
+          action: set_string,
+          type: "string",
+          description: "text string"
+        },
+        time2words: 
+        {
+          action: set_time2words,
+          type: "string",
+          description: "time separator e.g. :"
+        },
+        reverse: 
+        {
+          action: set_reverse,
+          type: "boolean",
+          description: "reverse the input string",
+          default: _reverse
+        },
+        shuffle: 
+        {
+          action: set_shuffle,
+          type: "boolean",
+          description: "shuffle the input string",
+          default: _shuffle
+        },
+        clear: 
+        {
+          action: clear,
+          type: "bang",
+          description: "clear the canvas"
+        },
+        send: 
+        {
+          action: send,
+          type: "bang",
+          description: "send the combined canvas"
+        }
+      })
+      .addOutputs(
+      {
+        string: 
+        {
+          type: "string"
+        }
+      });
+  </script>
+
+</body>
+</html>
